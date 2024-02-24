@@ -1,22 +1,18 @@
 const express = require('express');
 const httpServer = require('http');
 const socketIO = require('socket.io');
-const { ServerConfig } = require('./config');
-const apiRoutes = require('./routes');
 const cors = require('cors');
 const { World, Body } = require('p2');
-const { EventEmitter } = require('stream');
+const dotenv = require('dotenv');
+const Globals = require('./globals');
 
+dotenv.config();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use('/api', apiRoutes);
 
 const http = httpServer.createServer(app);
-const socketIO_Options = {};
-const io = socketIO(http, socketIO_Options);
+const io = socketIO(http);
 
 io.on('connection', socket => {
   const connectedPlayerCount = io.engine.clientsCount;
@@ -31,23 +27,11 @@ io.on('disconnect', (err) => {
   console.log(err);
 });
 
-http.listen(ServerConfig.PORT, () => {
-  console.log(`Successfully started the server on PORT : ${ServerConfig.PORT}`);
+http.listen(Globals.PORT, () => {
+  console.log(`Successfully started server on PORT : ${Globals.PORT}`);
 });
 
 //----------------------------------------------------------
-
-const gameRoom = 'game-room';
-const GAME_TICKER_MS = 100;
-const CANVAS_WIDTH = 1400;
-const CANVAS_HEIGHT = 750;
-const SHIP_POSITION_Y = CANVAS_HEIGHT - 32;
-const BULLET_SHOOT_POS_Y = SHIP_POSITION_Y;
-const MIN_PLAYERS_TO_START_MATCH = 2;
-const PHYSICS_WORLD_TIMESTEP = 1 / 16;
-const PLAYER_VERTICAL_MOVEMENT_UPDATE_INTERVAL = 1000;
-const PLAYER_VERTICAL_INCREMENT = 20;
-const PLAYER_SCORE_INCREMENT = 5;
 
 const playerMap = new Map();
 
