@@ -5,6 +5,7 @@ const { ServerConfig } = require('./config');
 const apiRoutes = require('./routes');
 const cors = require('cors');
 const { World, Body } = require('p2');
+const { EventEmitter } = require('stream');
 
 const app = express();
 
@@ -48,6 +49,8 @@ const PLAYER_VERTICAL_MOVEMENT_UPDATE_INTERVAL = 1000;
 const PLAYER_VERTICAL_INCREMENT = 20;
 const PLAYER_SCORE_INCREMENT = 5;
 
+const playerMap = new Map();
+
 let totalPlayersInRoom = 0;
 let isMatchStarted = false;
 let tickInterval = undefined;
@@ -56,7 +59,6 @@ let physicsWorld = undefined;
 let shipDynamicBody = undefined;
 let shipPositionX = 0;
 let shipVelocityTimer = 0;
-const players = [];
 
 // requires 'clientId' from client side
 function handlePlayerEnterRoom(socket, player) {
@@ -64,31 +66,46 @@ function handlePlayerEnterRoom(socket, player) {
   console.log(`Player Entered Room : ${gameRoom} with ID : ${player.id}`);
   totalPlayersInRoom++;
 
-  players[player.clientId] = {
+  playerMap.set(player.clientId, {
     id: player.clientId,
     x: getRandomXPosition(),
     y: 20,  // start from top
     avatarIndex: getRandomAvatarIndex(),
     score: 0,
     isAlive: true,
-  };
+  });
 
   if (totalPlayersInRoom === MIN_PLAYERS_TO_START_MATCH) {
     startMatch();
   }
 
-  subscribeToPlayerInput(socket, player.clientId);
+  socket.on('pos', data => handlePlayerInputs(socket, data));
 }
 
 function handlePlayerLeaveRoom(socket, player) {
   console.log(`Player Left Room with ID : ${player.id}`);
   totalPlayersInRoom--;
-  const index = players.indexOf(player);
-  if (index !== -1) {
-    players.splice(index, 1);
-  }
+  playerMap.delete(player);
   if (totalPlayersInRoom <= 0) {
     resetServerState();
+  }
+}
+
+function handlePlayerInputs(socket, msg) {
+  if (!playerMap.has(msg.playerId)) return;
+
+  if (msg.keyPressed === 'left') {
+    if (playerMap.get(msg.playerId).x - 20 < 20) {
+      playerMap.get(msg.playerId).x = 20;
+    } else {
+      playerMap.get(msg.playerId).x -= 20;
+    }
+  } else if (msg.keyPressed === 'right') {
+    if (playerMap.get(msg.playerId).x + 20 < 1380) {
+      playerMap.get(msg.playerId).x = 1380;
+    } else {
+      playerMap.get(msg.playerId).x -= 20;
+    }
   }
 }
 
@@ -125,7 +142,7 @@ function startMatch() {
     }
   }, 1000 * PHYSICS_WORLD_TIMESTEP);
 
-  players.forEach(player => {
+  playerMap.forEach((player, key, map) => {
     startDownwardMovement(player);
   });
 
@@ -162,10 +179,16 @@ function GenerateGameStateUpdate() {
     clearInterval(tickInterval);
   } else {
     const bulletState = GenerateBulletState();
+    const playersState = []; 
+    playerMap.forEach((player, key, map) => {
+      playersState.push({ player });
+    });
+
     io.to(gameRoom).emit('game-state', {
       bulletState,
       shipPositionX,
-      isMatchStarted
+      isMatchStarted,
+      players: playersState
     });
   }
 }
@@ -189,24 +212,6 @@ function getRandomXPosition() {
 
 function getRandomAvatarIndex() {
   return Math.floor(Math.random() * 3);
-}
-
-function subscribeToPlayerInput(socket, playerClientId) {
-  socket.on('pos', msg => {
-    if (msg.data.keyPressed === 'left') {
-      if (players[playerClientId].x - 20 < 20) {
-        players[playerClientId].x = 20;
-      } else {
-        players[playerClientId].x -= 20;
-      }
-    } else if (msg.data.keyPressed === 'right') {
-      if (players[playerClientId].x + 20 < 1380) {
-        players[playerClientId].x = 1380;
-      } else {
-        players[playerClientId].x -= 20;
-      }
-    }
-  });
 }
 
 function calculateRandomVelocity() {
