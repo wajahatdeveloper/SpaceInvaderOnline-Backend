@@ -174,11 +174,10 @@ function GenerateBulletState() {
   let bulletOrBlank = {};
   bulletShootTimer += GAME_TICKER_MS;
   // shoot every 5th update cycle
-  if (bulletShootTimer >= GAME_TICKER_MS * 5) {
+  if (bulletShootTimer >= GAME_TICKER_MS * 50) {
     bulletShootTimer = 0;
     bulletOrBlank = {
-      id: Math.floor(((Math.random() * 2000) + 50) * 1000) / 1000,
-      y: BULLET_SHOOT_POS_Y,
+      id: Math.floor(((Math.random() * 2000) + 50) * 1000),
     };
   }
   return bulletOrBlank;
