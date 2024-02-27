@@ -1,5 +1,4 @@
 const PORT = process.env.PORT || 8000;
-const GAME_ROOM = 'game-room';
 const GAME_TICKER_MS = 100;
 const CANVAS_WIDTH = 1400;
 const CANVAS_HEIGHT = 750;
@@ -13,7 +12,6 @@ const PLAYER_SCORE_INCREMENT = 5;
 
 module.exports = {
   PORT,
-  GAME_ROOM,
   GAME_TICKER_MS,
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
