@@ -7,10 +7,23 @@ const defaultGameRoomObject = {
   shipDynamicBody : undefined,
   shipVelocityTimer : 0,
   isMatchStarted: false,
-  playerCount: 0,
+  playersInRoom: [],
   shipPositionX: 0,
+};
+
+const defaultGameUpdateObject = {
   bulletState: {},
-  players: [],
+  shipPositionX: 0,
+  playerUpdates: [],
+};
+
+const defaultPlayerUpdateObject = {
+  username: '',
+  x: 0,
+  y: 0,
+  avatarIndex: 0,
+  score: 0,
+  isAlive: true,
 };
 
 const defaultPlayerObject = {
@@ -23,10 +36,10 @@ const defaultPlayerObject = {
   isAlive: true,
   gameRoomId: 0,
   socket: undefined,
+  registeredGameRoomEvents: false,
 };
 
 const allPlayers = new Map();
-const playersInLobby = [];
 const gameRooms = new Map();
 
 let currentGameRoomId = 0;
@@ -38,9 +51,10 @@ function deleteRoom(roomId) {
 module.exports = {
   defaultPlayerObject,
   allPlayers,
-  playersInLobby,
   defaultGameRoomObject,
   gameRooms,
   currentGameRoomId,
   deleteRoom,
+  defaultPlayerUpdateObject,
+  defaultGameUpdateObject,
 };

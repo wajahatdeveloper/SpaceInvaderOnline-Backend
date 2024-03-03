@@ -5,6 +5,7 @@ const httpServer = require('http');
 const socketIO = require('socket.io');
 const Consts = require('./support/constants');
 const { registerConnectionEvents } = require('./connections');
+const { gameplayUpdateLoop } = require('./gameplay');
 
 dotenv.config();
 const app = express();
@@ -21,3 +22,7 @@ io.on('connection', (socket) => {
 http.listen(Consts.PORT, () => {
   console.log(`Successfully started server on PORT : ${Consts.PORT}`);
 });
+
+setInterval(() => {
+  gameplayUpdateLoop(io);
+}, 50);

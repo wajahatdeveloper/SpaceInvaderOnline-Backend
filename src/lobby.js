@@ -57,7 +57,7 @@ function onPlayerEnterRoom(socket, player) {
   gameRoom.playerCount++;
 
   // add player data to room
-  gameRoom.players.push({
+  gameRoom.playersInRoom.push({
     username: player.username,
     x: utility.getRandomXPosition(),
     y: 20,  // start from top
