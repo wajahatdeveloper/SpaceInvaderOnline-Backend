@@ -15,7 +15,7 @@ app.use(cors());
 const http = httpServer.createServer(app);
 const io = socketIO(http);
 
-io.on('connection', (socket) => {
+io.on('connection', (socket: any) => {
   registerConnectionEvents(socket, io);
 });
 
