@@ -1,11 +1,11 @@
-const cors = require('cors');
-const dotenv = require('dotenv');
-const express = require('express');
-const httpServer = require('http');
-const socketIO = require('socket.io');
-const Consts = require('./support/constants');
-const { registerConnectionEvents } = require('./connections');
-const { gameplayUpdateLoop } = require('./gameplay');
+import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import httpServer from "http";
+import { Server } from "socket.io";
+
+import { PORT } from "./support/constants";
+import { listenForRoomRequest } from "./lobby";
 
 dotenv.config();
 const app = express();
@@ -13,16 +13,17 @@ const app = express();
 app.use(cors());
 
 const http = httpServer.createServer(app);
-const io = socketIO(http);
+const io = new Server(http);
 
-io.on('connection', (socket: any) => {
-  registerConnectionEvents(socket, io);
+io.on("connection", (socket: any) => {
+  console.log(`New Player Connected with ID : ${socket.id}`);
+  listenForRoomRequest(socket, io);
+
+  socket.on("disconnect", (data: any) => {
+    console.log(`Player Disconnected with ID : ${socket.id}`);
+  });
 });
 
-http.listen(Consts.PORT, () => {
-  console.log(`Successfully started server on PORT : ${Consts.PORT}`);
+http.listen(PORT, () => {
+  console.log(`Successfully started server on PORT : ${PORT}`);
 });
-
-setInterval(() => {
-  gameplayUpdateLoop(io);
-}, 50);

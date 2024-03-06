@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import { GamePlayerObject, GameRoomObject, MatchUpdateObject, PlayerUpdateObject } from "./support/types";
 
-import { allGameRooms, allPlayers } from './support/data';
+import { allGameRooms } from './support/data';
 import * as utility from './support/utility';
 import * as Consts from './support/constants';
 import { World, Body } from 'p2';
@@ -147,20 +147,20 @@ function gameplayUpdateLoop(ioInst: Socket) {
     io = ioInst;
   }
 
-  allPlayers.forEach((player: GamePlayerObject) => {
-    if (!player.registeredGameRoomEvents) {
-      player.registeredGameRoomEvents = true;
-
-      // init player
-      player.socket.on('player-input', function(keyPressed) {handlePlayerInput(player, keyPressed);});
-      player.socket.on('player-lost', function() {handlePlayerLost(player);});
-    }
-  });
-
   allGameRooms.forEach((gameRoom: GameRoomObject) => {
     if (!gameRoom.isMatchStarted) {
       gameRoom.isMatchStarted = true;
 
+      gameRoom.playersInRoom!.forEach((player: GamePlayerObject) => {
+        if (!player.registeredGameRoomEvents) {
+          player.registeredGameRoomEvents = true;
+    
+          // init player
+          player.socket.on('player-input', function(keyPressed) {handlePlayerInput(player, keyPressed);});
+          player.socket.on('player-lost', function() {handlePlayerLost(player);});
+        }
+      });
+      
       // init room
       startMatch(gameRoom);
     }

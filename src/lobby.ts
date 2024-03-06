@@ -1,49 +1,61 @@
-import { Socket } from "socket.io";
-import { GamePlayerObject, GameRoomObject } from "./support/types";
-import { allPlayers, allGameRooms, currentGameRoomId, deleteRoom } from "./support/data";
-import * as utility from './support/utility';
+import { Server, Socket } from "socket.io";
+import { MIN_PLAYERS_TO_START_MATCH } from "./support/constants";
+import * as utility from "./support/utility";
 
-let io: Socket;
+let io: Server;
 
-function listenForRoomRequest(socket: Socket, ioInst: Socket) {
+export function listenForRoomRequest(socket: Socket, ioInst: Server) {
   io = ioInst;
-  socket.on('request-room', data => arrangeRoom(data, socket));
+  socket.on("request-room", (data) => arrangeRoom(data, socket)); // data = username, clientId
 }
 
 function arrangeRoom(data: any, socket: Socket) {
   // register player
-  socket.on('enter-room', data => onPlayerEnterRoom(socket, data));
-  socket.on('leave-room', data => onPlayerLeaveRoom(socket, data));
-  //* serverData.allPlayers.set(data.username, {...serverData.defaultPlayerObject, username: data.username, clientId: data.clientId});
+  socket.on("enter-room", (data) => onPlayerEnterRoom(socket, data));
+  socket.on("leave-room", (data) => onPlayerLeaveRoom(socket, data));
 
   // check if an existing player is waiting for room
-  const openPlayers: GamePlayerObject[] = [];
-  allPlayers.forEach(player => {if (player.gameRoomId === 0) openPlayers.push(player);});
-  if (openPlayers.length > 1) {
-    // at least two players are available for match making
-    // create a new game room and assign these players together
-    const p1 = openPlayers[0];
-    const p2 = openPlayers[1];
-    const roomId = createNewRoom();
+  allGameRooms.forEach((gameRoom) => {
+    if (gameRoom.playersInRoom!.length < MIN_PLAYERS_TO_START_MATCH) {
+      // add joining player to this room
+      const newPlayer: GamePlayerObject = {
+        username: data.username,
+        x: utility.getRandomXPosition(),
+        y: 20, // start from top
+        avatarIndex: utility.getRandomAvatarIndex(),
+        score: 0,
+        isAlive: true,
+        clientId: data.clientId,
+        gameRoomId: gameRoom.id,
+        registeredGameRoomEvents: false,
+        socket: socket,
+      };
+      gameRoom.playersInRoom!.push(newPlayer);
+      
+    }
 
-    p1.gameRoomId = roomId;
-    p2.gameRoomId = roomId;
+    if(gameRoom.playersInRoom!.length === MIN_PLAYERS_TO_START_MATCH) {
+      // at least two players are available for match making
+      // create a new game room and assign these players together
+      const p1 = gameRoom.playersInRoom![0];
+      const p2 = gameRoom.playersInRoom![1];
+      const roomId = createNewRoom();
 
-    p1.socket.join(roomId.toString());
-    p2.socket.join(roomId.toString());
+      p1.gameRoomId = roomId;
+      p2.gameRoomId = roomId;
 
-    setTimeout(function() {
-      io.to(roomId.toString()).emit('joined-room', { roomId });
+      p1.socket.join(roomId.toString());
+      p2.socket.join(roomId.toString());
 
-      setTimeout(function() {
-        io.to(roomId.toString()).emit('start-game');
-      }, 1000);
+      setTimeout(function () {
+        io.to(roomId.toString()).emit("joined-room", { roomId });
 
-    }, 500);
-  } else {
-    // there are no additional players waiting, that means this is the only player
-    // wait for more players to connect for pairing
-  }
+        setTimeout(function () {
+          io.to(roomId.toString()).emit("start-game");
+        }, 1000);
+      }, 500);
+    }
+  });
 }
 
 function createNewRoom() {
@@ -63,36 +75,21 @@ function createNewRoom() {
 }
 
 function onPlayerEnterRoom(socket: Socket, player: GamePlayerObject) {
-  console.log(`Player with ID : ${player.clientId} and Username: ${player.username} has Entered Room : ${player.gameRoomId} `);
+  console.log(
+    `Player with ID : ${player.clientId} and Username: ${player.username} has Entered Room : ${player.gameRoomId} `
+  );
 
   const gameRoom: GameRoomObject = allGameRooms.get(player.gameRoomId)!;
-  let playerCount: number = gameRoom.playersInRoom?.length!;
-  playerCount++;
-
-  // add player data to room
-  const newPlayer: GamePlayerObject = {
-    username: player.username,
-    x: utility.getRandomXPosition(),
-    y: 20,  // start from top
-    avatarIndex: utility.getRandomAvatarIndex(),
-    score: 0,
-    isAlive: true,
-    clientId: player.clientId,
-    gameRoomId: gameRoom.id,
-    registeredGameRoomEvents: player.registeredGameRoomEvents,
-    socket: player.socket,
-  }
-  gameRoom!.playersInRoom!.push(newPlayer);
 }
 
 function onPlayerLeaveRoom(socket: Socket, player: GamePlayerObject) {
-  console.log(`Player with ID : ${player.clientId} and Username: ${player.username} has Left Room : ${player.gameRoomId} `);
-  
-  const gameRoom = allGameRooms.get(player.gameRoomId)!;
-  let playerCount: number = gameRoom.playersInRoom?.length!;
-  playerCount--;
+  console.log(
+    `Player with ID : ${player.clientId} and Username: ${player.username} has Left Room : ${player.gameRoomId} `
+  );
 
-  if (playerCount <= 0) {
+  const gameRoom = allGameRooms.get(player.gameRoomId)!;
+
+  if (gameRoom.playersInRoom!.length <= 0) {
     deleteRoom(gameRoom.id);
   }
 }
