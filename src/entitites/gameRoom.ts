@@ -1,11 +1,15 @@
 import p2 from "p2";
 import { GamePlayer } from "./gamePlayer";
+import { Server } from "socket.io";
 
 export class GameRoom {
   static roomIdIndex: number = 0;
   static allGameRooms: Map<string, GameRoom> = new Map(); // key = roomId
 
+  playersInRoom: GamePlayer[] | undefined;
+
   roomId: string = "";
+  isMatchStarted: boolean = false;
 
   bulletShootTimerValue: number = 0;
   shipVelocityTimerValue: number = 0;
@@ -14,12 +18,16 @@ export class GameRoom {
   p2World: p2.World | undefined;
   shipDynamicBody: p2.Body | undefined;
 
-  isMatchStarted: boolean = false;
+  socketIO: Server;
 
-  playersInRoom: GamePlayer[] | undefined;
-
-  constructor() {
+  constructor(socketIOInst: Server) {
     this.roomId = (GameRoom.roomIdIndex + 1).toString();
+    this.socketIO = socketIOInst;
+    console.log(`New Room Created with Id ${this.roomId}`);
+  }
+
+  update(): void {
+
   }
 
   delete(): void {
