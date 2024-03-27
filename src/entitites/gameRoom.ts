@@ -6,7 +6,7 @@ export class GameRoom {
   static roomIdIndex: number = 0;
   static allGameRooms: Map<string, GameRoom> = new Map(); // key = roomId
 
-  playersInRoom: GamePlayer[] | undefined;
+  playersInRoom: GamePlayer[] | undefined = new Array<GamePlayer>();
 
   roomId: string = "";
   isMatchStarted: boolean = false;

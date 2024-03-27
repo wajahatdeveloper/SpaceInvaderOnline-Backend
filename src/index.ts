@@ -2,10 +2,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import httpServer from "http";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 
 import { PORT } from "./support/constants";
 import { newPlayerConnected } from "./lobby";
+import { NetEvent, eventManager, useServer } from "./net-phaser-server";
 
 dotenv.config();
 const app = express();
@@ -13,16 +14,11 @@ const app = express();
 app.use(cors());
 
 const http = httpServer.createServer(app);
-const socketIO = new Server(http);
+const socketServer = new Server(http);
 
-socketIO.on("connection", (socket: Socket) => {
-  console.log(`New Player Connected with Socket ID : ${socket.id}`);
-  newPlayerConnected(socket, socketIO);
+useServer(socketServer);
 
-  socket.on("disconnect", (data: any) => {
-    console.log(`Player Disconnected with Socket ID : ${socket.id}`);
-  });
-});
+eventManager.registerCallback(NetEvent.OnPlayerConnected, (playerSocket)=> newPlayerConnected(playerSocket, socketServer))
 
 http.listen(PORT, () => {
   console.log(`Successfully started server on PORT : ${PORT}`);

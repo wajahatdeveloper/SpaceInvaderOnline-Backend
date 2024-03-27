@@ -28,7 +28,7 @@ function arrangeRoom(username: any, socket: Socket) {
   // check if an existing player is waiting for room
   let partialFilledRooms: Array<GameRoom> = new Array<GameRoom>();
   GameRoom.allGameRooms.forEach((gameRoom, key, map)=>{
-    if(gameRoom.playersInRoom!.length < MIN_PLAYERS_TO_START_MATCH) {
+    if(gameRoom.playersInRoom === undefined || gameRoom.playersInRoom!.length < MIN_PLAYERS_TO_START_MATCH) {
       partialFilledRooms.push(gameRoom);
     }
   });

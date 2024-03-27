@@ -24,7 +24,7 @@ export class GamePlayer {
   }
 
   static get(userName: string) : GamePlayer | undefined {
-    this.allGamePlayers.forEach((player, key, map) => {
+    GamePlayer.allGamePlayers.forEach((player, key, map) => {
       if(player.username == userName) return player;
     });
     console.log(`userName ${userName} not found!`);
