@@ -3,10 +3,14 @@ type Callback<T> = (data: T, event: NetEvent) => void;
 
 // Define an enum for different uses
 export enum NetEvent {
-  OnPlayerConnected,
-  OnPlayerDisconnected,
+  OnPlayerConnected,  // playerSocket
+  OnPlayerDisconnected, // playerSocket
 
-  OnSessionFound,
+  OnSessionJoined,  // playerSocket, sessionId
+  OnSessionLeft,  // playerSocket, sessionId
+
+  OnDataSent, // playerSocket, data
+  OnDataReceived, // fromClientId, data
 }
 
 class EventManager<T> {
