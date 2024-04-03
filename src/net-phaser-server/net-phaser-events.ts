@@ -5,6 +5,8 @@ type Callback<T> = (data: T, event: NetEvent) => void;
 export enum NetEvent {
   OnPlayerConnected,
   OnPlayerDisconnected,
+
+  OnSessionFound,
 }
 
 class EventManager<T> {
