@@ -3,7 +3,7 @@ import { NetEvent, eventManager } from "./net-phaser-events";
 import { ClientData } from "./types";
 import { NetPhaserConfig, setConfig } from "./net-phaser-config";
 import { joinSession, leaveSession } from "./net-phaser-session";
-import { receiveData, sendDataToAll } from "./net-phaser-session-sync";
+import { sendDataToAll } from "./net-phaser-session-sync";
 
 const clientPool: Map<string, ClientData> = new Map(); // clientId, clientData
 
@@ -26,7 +26,6 @@ function useServer(socketServer: Server, config: NetPhaserConfig) {
     playerSocket.on("joinSession", () => joinSession(playerSocket, clientId));
     playerSocket.on("leaveSession", () => leaveSession(playerSocket, clientId));
     playerSocket.on("sendDataToAll", (sessionId, data) => sendDataToAll(playerSocket, socketServer, clientId, sessionId, data));
-    playerSocket.on("receiveData", (fromClientId, data) => receiveData(fromClientId, data));
   });
 }
 

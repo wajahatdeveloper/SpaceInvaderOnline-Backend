@@ -10,7 +10,6 @@ export enum NetEvent {
   OnSessionLeft,  // playerSocket, sessionId
 
   OnDataSent, // playerSocket, data
-  OnDataReceived, // fromClientId, data
 }
 
 class EventManager<T> {

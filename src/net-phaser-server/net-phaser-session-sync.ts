@@ -9,13 +9,6 @@ function sendDataToAll(playerSocket: Socket, socketServer: Server, clientId: str
     eventManager.triggerCallback(NetEvent.OnDataSent, {playerSocket, data})
 }
 
-function receiveData(fromClientId: string, data: any) {
-    eventManager.triggerCallback(NetEvent.OnDataReceived, {fromClientId, data});
-
-    console.log(`receivedData from ${fromClientId}, data: ${JSON.stringify(data)}`);
-}
-
 export {
     sendDataToAll,
-    receiveData,
 }
