@@ -1,7 +1,15 @@
 import p2, { Body, World } from "p2";
 import { GamePlayer } from "./gamePlayer";
 import { Server } from "socket.io";
-import { CANVAS_WIDTH, GAME_TICKER_MS, PHYSICS_WORLD_TIMESTEP, PLAYER_SCORE_INCREMENT, PLAYER_VERTICAL_INCREMENT, PLAYER_VERTICAL_MOVEMENT_UPDATE_INTERVAL, SHIP_POSITION_Y } from "./support/constants";
+import {
+  CANVAS_WIDTH,
+  GAME_TICKER_MS,
+  PHYSICS_WORLD_TIMESTEP,
+  PLAYER_SCORE_INCREMENT,
+  PLAYER_VERTICAL_INCREMENT,
+  PLAYER_VERTICAL_MOVEMENT_UPDATE_INTERVAL,
+  SHIP_POSITION_Y,
+} from "./support/constants";
 import { calculateRandomVelocity } from "./support/utility";
 import { MatchUpdateObject, PlayerUpdateObject } from "./support/types";
 
@@ -35,19 +43,29 @@ export class GameRoom {
     console.log(`GameRoom [${this.roomId}]: Starting Match`);
 
     this.p2World = new World({ gravity: [0, -9.82] });
-    this.p2WorldInterval = setInterval(() => this.routine_P2PhysicsStep(), 1000 * PHYSICS_WORLD_TIMESTEP);
-    this.stateUpdateInterval = setInterval(() => this.routine_gameStateUpdate(), GAME_TICKER_MS);
-    
+    this.p2WorldInterval = setInterval(
+      () => this.routine_P2PhysicsStep(),
+      1000 * PHYSICS_WORLD_TIMESTEP
+    );
+    this.stateUpdateInterval = setInterval(
+      () => this.routine_gameStateUpdate(),
+      GAME_TICKER_MS
+    );
+
     this.shipDynamicBody = new Body({
       position: [this.currentShipXPosition, SHIP_POSITION_Y],
-      velocity: [calculateRandomVelocity(), 0]
+      velocity: [calculateRandomVelocity(), 0],
     });
-    
+
     this.p2World!.addBody(this.shipDynamicBody!);
 
     this.playersInRoom!.forEach((player) => {
-      player.socket.on('player-input', (keyPressed) => {this.handlePlayerInput(player, keyPressed);});
-      player.socket.on('player-lost', () => {this.handlePlayerLost(player);});
+      player.socket.on("player-input", (keyPressed) => {
+        this.handlePlayerInput(player, keyPressed);
+      });
+      player.socket.on("player-lost", () => {
+        this.handlePlayerLost(player);
+      });
       this.startDownwardMovement(player);
     });
 
@@ -70,7 +88,6 @@ export class GameRoom {
     }
 
     // update ship position
-    
   }
 
   delete(): void {
@@ -95,23 +112,27 @@ export class GameRoom {
   }
 
   handlePlayerWon(player: GamePlayer) {
-    player.socket.emit('you-win');
-    console.log(`GameRoom [${this.roomId}]: Player ${player.username} won the match!`);
+    player.socket.emit("you-win");
+    console.log(
+      `GameRoom [${this.roomId}]: Player ${player.username} won the match!`
+    );
   }
 
   handlePlayerLost(player: GamePlayer) {
-    player.socket.emit('you-lose');
-    console.log(`GameRoom [${this.roomId}]: Player ${player.username} lost the match!`);
+    player.socket.emit("you-lose");
+    console.log(
+      `GameRoom [${this.roomId}]: Player ${player.username} lost the match!`
+    );
   }
 
-  handlePlayerInput(player: GamePlayer, keyPressed: string) {  
-    if (keyPressed === 'left') {
+  handlePlayerInput(player: GamePlayer, keyPressed: string) {
+    if (keyPressed === "left") {
       if (player.x - 20 < 20) {
         player.x = 20;
       } else {
         player.x -= 20;
       }
-    } else if (keyPressed === 'right') {
+    } else if (keyPressed === "right") {
       if (player.x + 20 < 1380) {
         player.x = 1380;
       } else {
@@ -125,19 +146,25 @@ export class GameRoom {
     this.shipVelocityTimerValue++;
     if (this.shipVelocityTimerValue >= 80) {
       this.shipVelocityTimerValue = 0;
-      this.shipDynamicBody!.velocity[0] = calculateRandomVelocity(); ;
+      this.shipDynamicBody!.velocity[0] = calculateRandomVelocity();
     }
-  
+
     // process the physics step
     this.p2World!.step(PHYSICS_WORLD_TIMESTEP);
-  
+
     // enforce ship bounds
-    if (this.shipDynamicBody!.position[0] > CANVAS_WIDTH && this.shipDynamicBody!.velocity[0] > 0) {
+    if (
+      this.shipDynamicBody!.position[0] > CANVAS_WIDTH &&
+      this.shipDynamicBody!.velocity[0] > 0
+    ) {
       this.shipDynamicBody!.position[0] = 0;
-    } else if (this.shipDynamicBody!.position[0] < 0 && this.shipDynamicBody!.velocity[0] < 0) {
+    } else if (
+      this.shipDynamicBody!.position[0] < 0 &&
+      this.shipDynamicBody!.velocity[0] < 0
+    ) {
       this.shipDynamicBody!.position[0] = CANVAS_WIDTH - 32;
     }
-  
+
     // set ship velocity in room state
     this.currentShipXPosition = this.shipDynamicBody!.position[0];
   }
@@ -146,9 +173,9 @@ export class GameRoom {
     const gameUpdate: MatchUpdateObject = {
       playerUpdates: [],
       shootBullet: this.ShouldFireBullet(),
-      shipPositionX : this.shipDynamicBody!.position[0],
+      shipPositionX: this.shipDynamicBody!.position[0],
     };
-    this.playersInRoom!.forEach(player => {
+    this.playersInRoom!.forEach((player) => {
       const playerUpdate: PlayerUpdateObject = {
         username: player.username,
         x: player.x,
@@ -156,23 +183,22 @@ export class GameRoom {
         avatarIndex: player.avatarIndex,
         score: player.score,
         isAlive: player.isAlive,
-      }
+      };
       gameUpdate.playerUpdates.push(playerUpdate);
     });
-    this.socketIO.to(this.roomId).emit('game-state', gameUpdate);
+    this.socketIO.to(this.roomId).emit("game-state", gameUpdate);
   }
 
-  ShouldFireBullet() : boolean {
+  ShouldFireBullet(): boolean {
     let bulletOrBlank = 0;
     this.bulletShootTimerValue += GAME_TICKER_MS;
-    
+
     // shoot every 5th update cycle
     if (this.bulletShootTimerValue >= GAME_TICKER_MS * 50) {
       this.bulletShootTimerValue = 0;
-      bulletOrBlank = Math.floor(((Math.random() * 2000) + 50) * 1000);
+      bulletOrBlank = Math.floor((Math.random() * 2000 + 50) * 1000);
     }
-    
+
     return bulletOrBlank > 0 ? true : false;
   }
-
 }

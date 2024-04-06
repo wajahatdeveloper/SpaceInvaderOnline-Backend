@@ -35,6 +35,9 @@ eventManager.registerCallback(NetEvent.OnSessionJoined, ({clientData, sessionId}
 
   // add joining player to the room
   const gamePlayer = new GamePlayer(clientData.id, clientData.socket, sessionId);
+  gamePlayer.avatarIndex = 0;
+  gamePlayer.isAlive = true;
+  gamePlayer.score = 0;
   gameRoom.playersInRoom?.push(gamePlayer);
 
   // start match when required number of players joined the room

@@ -5,7 +5,6 @@ export class GamePlayer {
   socket: Socket;
 
   gameRoomId: string = "";
-  registeredGameRoomEvents: boolean = false;
 
   username: string = "";
   isAlive: boolean = true;
