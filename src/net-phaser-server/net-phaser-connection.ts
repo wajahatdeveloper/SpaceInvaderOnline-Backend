@@ -12,14 +12,14 @@ function useServer(socketServer: Server, config: NetPhaserConfig) {
   setConfig(config);
 
   socketServer.on("connection", (playerSocket: Socket) => {
-    eventManager.triggerCallback(NetEvent.OnPlayerConnected, playerSocket);
     let clientId = playerSocket.handshake.query.clientId?.toString()!;
     clientPool.set(clientId, { id: clientId, sessionId: '', socket: playerSocket });
+    eventManager.triggerCallback(NetEvent.OnPlayerConnected, clientPool.get(clientId));
     console.log(`New Player Connected with Socket ID : ${playerSocket.id} & Client ID : ${clientId}`);
 
     playerSocket.on("disconnect", (data: any) => {
       console.log(`Player Disconnected with Socket ID : ${playerSocket.id}`);
-      eventManager.triggerCallback(NetEvent.OnPlayerDisconnected, playerSocket);
+      eventManager.triggerCallback(NetEvent.OnPlayerDisconnected, clientPool.get(clientId));
       clientPool.delete(clientId);
     });
 
@@ -29,4 +29,9 @@ function useServer(socketServer: Server, config: NetPhaserConfig) {
   });
 }
 
-export { useServer, clientPool };
+function getClientData(clientId: string)
+{
+  return clientPool.get(clientId);
+}
+
+export { useServer, getClientData, clientPool };

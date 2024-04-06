@@ -34,7 +34,7 @@ function joinSession(playerSocket: Socket, clientId: string)
     playerSocket.emit('sessionJoined', useSession.id);
     console.log(`client ${clientId} joined session ${useSession.id}`);
 
-    eventManager.triggerCallback(NetEvent.OnSessionJoined, {playerSocket, sessionId: useSession.id})
+    eventManager.triggerCallback(NetEvent.OnSessionJoined, {clientData: client, sessionId: useSession.id})
 }
 
 function leaveSession(playerSocket: Socket, clientId: string)
@@ -43,7 +43,7 @@ function leaveSession(playerSocket: Socket, clientId: string)
         s.clients.find(x=>x.id === clientId)
     })!;
 
-    eventManager.triggerCallback(NetEvent.OnSessionLeft, {playerSocket, sessionId: session.id})
+    eventManager.triggerCallback(NetEvent.OnSessionLeft, {clientData:clientPool.get(clientId), sessionId: session.id})
     
     removeClientFromSession(session, clientId);
 
