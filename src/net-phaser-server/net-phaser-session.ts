@@ -1,8 +1,8 @@
-import { Server, Socket } from "socket.io";
+import { Socket } from "socket.io";
 import { NetEvent, eventManager } from "./net-phaser-events";
 import { SessionData } from "./types";
 import { config } from "./net-phaser-config";
-import { clientPool, useServer } from "./net-phaser-connection";
+import { clientPool } from "./net-phaser-connection";
 
 let sessions: SessionData[] = [];
 

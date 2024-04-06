@@ -28,15 +28,15 @@ export class GameRoom {
   constructor(socketIOInst: Server, roomId: string) {
     this.roomId = roomId;
     this.socketIO = socketIOInst;
-    console.log(`New Room Created with Id ${this.roomId}`);
+    console.log(`GameRoom [${this.roomId}]: New GameRoom Instantiated`);
   }
 
   startMatch() {
-    console.log('Starting Match');
+    console.log(`GameRoom [${this.roomId}]: Starting Match`);
 
     this.p2World = new World({ gravity: [0, -9.82] });
-    this.p2WorldInterval = setInterval(() => routine_P2PhysicsStep(gameRoom), 1000 * PHYSICS_WORLD_TIMESTEP);
-    this.stateUpdateInterval = setInterval(() => routine_gameStateUpdate(gameRoom), GAME_TICKER_MS);
+    this.p2WorldInterval = setInterval(() => this.routine_P2PhysicsStep(), 1000 * PHYSICS_WORLD_TIMESTEP);
+    this.stateUpdateInterval = setInterval(() => this.routine_gameStateUpdate(), GAME_TICKER_MS);
     
     this.shipDynamicBody = new Body({
       position: [this.currentShipXPosition, SHIP_POSITION_Y],
@@ -65,7 +65,7 @@ export class GameRoom {
       // give the last remaining player the win, and close the room
       const player = this.playersInRoom[0];
       this.handlePlayerWon(player);
-      console.log(`Cleaning up room ${this.roomId}`);
+      console.log(`GameRoom [${this.roomId}]: Destroyed`);
       this.delete();
     }
 
@@ -96,12 +96,12 @@ export class GameRoom {
 
   handlePlayerWon(player: GamePlayer) {
     player.socket.emit('you-win');
-    console.log(`Player ${player.username} won the match!`);
+    console.log(`GameRoom [${this.roomId}]: Player ${player.username} won the match!`);
   }
 
   handlePlayerLost(player: GamePlayer) {
     player.socket.emit('you-lose');
-    console.log(`Player ${player.username} lost the match!`);
+    console.log(`GameRoom [${this.roomId}]: Player ${player.username} lost the match!`);
   }
 
   handlePlayerInput(player: GamePlayer, keyPressed: string) {  
@@ -145,7 +145,7 @@ export class GameRoom {
   routine_gameStateUpdate() {
     const gameUpdate: MatchUpdateObject = {
       playerUpdates: [],
-      shootBullet: ShouldFireBullet(),
+      shootBullet: this.ShouldFireBullet(),
       shipPositionX : this.shipDynamicBody!.position[0],
     };
     this.playersInRoom!.forEach(player => {

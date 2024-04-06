@@ -5,6 +5,7 @@ export interface ClientData
     id: string;
     sessionId: string;
     socket: Socket;
+    reconnectionInterval: NodeJS.Timeout | undefined;
 }
 
 export interface SessionData
