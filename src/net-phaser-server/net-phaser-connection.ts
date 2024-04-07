@@ -62,7 +62,7 @@ function useServer(socketServer: Server, config: NetPhaserConfig) {
     playerSocket.on("joinSession", () => joinSession(playerSocket, clientId));
     playerSocket.on("leaveSession", () => leaveSession(playerSocket, clientId));
     playerSocket.on("sendDataToAll", (sessionId, data) =>
-      sendDataToAll(playerSocket, socketServer, clientId, sessionId, data)
+      sendDataToAll(socketServer, clientId, sessionId, data)
     );
   });
 }

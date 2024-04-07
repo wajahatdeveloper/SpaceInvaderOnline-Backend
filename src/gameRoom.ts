@@ -4,6 +4,12 @@ import { Server } from "socket.io";
 import {
   CANVAS_WIDTH,
   GAME_TICKER_MS,
+  INBOUND_MATCH_EVENT_PLAYER_INPUT,
+  INBOUND_MATCH_EVENT_PLAYER_LOST,
+  OUTBOUND_MATCH_EVENT_MATCH_INITAL,
+  OUTBOUND_MATCH_EVENT_MATCH_UPDATE,
+  OUTBOUND_MATCH_EVENT_PLAYER_LOST,
+  OUTBOUND_MATCH_EVENT_PLAYER_WON,
   PHYSICS_WORLD_TIMESTEP,
   PLAYER_SCORE_INCREMENT,
   PLAYER_VERTICAL_INCREMENT,
@@ -11,7 +17,8 @@ import {
   SHIP_POSITION_Y,
 } from "./support/constants";
 import { calculateRandomVelocity } from "./support/utility";
-import { MatchUpdateObject, PlayerUpdateObject } from "./support/types";
+import { MatchInitalObject, MatchUpdateObject, PlayerInitalObject, PlayerUpdateObject } from "./support/types";
+import { sendDataToAll } from "./net-phaser-server/net-phaser-session-sync";
 
 export class GameRoom {
   static allGameRooms: Map<string, GameRoom> = new Map(); // key = roomId
@@ -59,35 +66,32 @@ export class GameRoom {
 
     this.p2World!.addBody(this.shipDynamicBody!);
 
+    const initalUpdate: MatchInitalObject = {
+      playerInitals: []
+    };
+
     this.playersInRoom!.forEach((player) => {
-      player.socket.on("player-input", (keyPressed) => {
+      
+      player.socket.on(INBOUND_MATCH_EVENT_PLAYER_INPUT, (keyPressed) => {
         this.handlePlayerInput(player, keyPressed);
       });
-      player.socket.on("player-lost", () => {
+      
+      player.socket.on(INBOUND_MATCH_EVENT_PLAYER_LOST, () => {
         this.handlePlayerLost(player);
       });
+      
       this.startDownwardMovement(player);
+
+      const playerInitial: PlayerInitalObject = {
+        avatarIndex: 0, username: player.clientId
+      };
+      
+      initalUpdate.playerInitals.push(playerInitial);
     });
 
+    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_MATCH_INITAL, initalUpdate);
+
     this.isMatchStarted = true;
-  }
-
-  update(): void {
-    // wait for match to start
-    if (!this.isMatchStarted) {
-      return;
-    }
-
-    // check player count is valid
-    if (this.playersInRoom?.length <= 1) {
-      // give the last remaining player the win, and close the room
-      const player = this.playersInRoom[0];
-      this.handlePlayerWon(player);
-      console.log(`GameRoom [${this.roomId}]: Destroyed`);
-      this.delete();
-    }
-
-    // update ship position
   }
 
   delete(): void {
@@ -103,6 +107,7 @@ export class GameRoom {
         player.score += PLAYER_SCORE_INCREMENT;
         if (player.y > SHIP_POSITION_Y) {
           this.handlePlayerWon(player);
+          this.delete();
           clearInterval(interval);
         }
       } else {
@@ -112,16 +117,20 @@ export class GameRoom {
   }
 
   handlePlayerWon(player: GamePlayer) {
-    player.socket.emit("you-win");
+    this.isMatchStarted = false;
+    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_WON, {
+      winnerId: player.clientId
+    });
     console.log(
-      `GameRoom [${this.roomId}]: Player ${player.username} won the match!`
+      `GameRoom [${this.roomId}]: Player ${player.clientId} won the match!`
     );
   }
 
   handlePlayerLost(player: GamePlayer) {
-    player.socket.emit("you-lose");
-    console.log(
-      `GameRoom [${this.roomId}]: Player ${player.username} lost the match!`
+    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_LOST, {
+      loserId: player.clientId
+    });    console.log(
+      `GameRoom [${this.roomId}]: Player ${player.clientId} lost the match!`
     );
   }
 
@@ -177,16 +186,23 @@ export class GameRoom {
     };
     this.playersInRoom!.forEach((player) => {
       const playerUpdate: PlayerUpdateObject = {
-        username: player.username,
         x: player.x,
         y: player.y,
-        avatarIndex: player.avatarIndex,
         score: player.score,
         isAlive: player.isAlive,
       };
       gameUpdate.playerUpdates.push(playerUpdate);
     });
-    this.socketIO.to(this.roomId).emit("game-state", gameUpdate);
+    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_MATCH_UPDATE, gameUpdate);
+
+    // check player count is valid
+    if (this.playersInRoom?.length <= 1) {
+      // give the last remaining player the win, and close the room
+      const player = this.playersInRoom[0];
+      this.handlePlayerWon(player);
+      console.log(`GameRoom [${this.roomId}]: Destroyed`);
+      this.delete();
+    }
   }
 
   ShouldFireBullet(): boolean {

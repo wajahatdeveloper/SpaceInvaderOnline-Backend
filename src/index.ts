@@ -53,11 +53,6 @@ eventManager.registerCallback(NetEvent.OnSessionLeft, ({clientData, sessionId}:{
   gameRoom.playersInRoom?.splice(playerIndex, 1);
 });
 
-// keep updating all game rooms until the server is running
-setInterval(()=>{
-  GameRoom.allGameRooms.forEach(gameRoom => {gameRoom.update()});
-}, GAME_TICKER_MS)
-
 http.listen(PORT, () => {
   console.log(`Successfully started server on PORT : ${PORT}`);
 });

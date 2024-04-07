@@ -5,10 +5,17 @@ export interface MatchUpdateObject {
 }
 
 export interface PlayerUpdateObject {
-  username: string;
   x: number;
   y: number;
-  avatarIndex: number;
   score: number;
   isAlive: boolean;
+}
+
+export interface MatchInitalObject {
+  playerInitals: PlayerInitalObject[];
+}
+
+export interface PlayerInitalObject {
+  username: string;
+  avatarIndex: number;
 }
