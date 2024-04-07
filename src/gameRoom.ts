@@ -18,7 +18,6 @@ import {
 } from "./support/constants";
 import { calculateRandomVelocity } from "./support/utility";
 import { MatchInitalObject, MatchUpdateObject, PlayerInitalObject, PlayerUpdateObject } from "./support/types";
-import { sendDataToAll } from "./net-phaser-server/net-phaser-session-sync";
 
 export class GameRoom {
   static allGameRooms: Map<string, GameRoom> = new Map(); // key = roomId
@@ -39,6 +38,14 @@ export class GameRoom {
   stateUpdateInterval: NodeJS.Timeout | undefined;
 
   socketIO: Server;
+
+  // EVENT FLOW
+  // 1. Inital Match Update
+  // 2. Regular Match Update
+  // 3. Match : Player Lost by Leaving Match
+  // 4. Match : Player Won by Reaching Bottom
+  // 5. Player : Player Input
+  // 6. Player : Player Lost by Bullet Collision
 
   constructor(socketIOInst: Server, roomId: string) {
     this.roomId = roomId;
@@ -142,10 +149,10 @@ export class GameRoom {
         player.x -= 20;
       }
     } else if (keyPressed === "right") {
-      if (player.x + 20 < 1380) {
+      if (player.x + 20 > 1380) {
         player.x = 1380;
       } else {
-        player.x -= 20;
+        player.x += 20;
       }
     }
   }
