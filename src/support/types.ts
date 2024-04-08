@@ -16,6 +16,8 @@ export interface MatchInitalObject {
 }
 
 export interface PlayerInitalObject {
+  startX: number;
+  startY: number;
   username: string;
   avatarIndex: number;
 }

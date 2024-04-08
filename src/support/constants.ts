@@ -9,6 +9,8 @@ const PHYSICS_WORLD_TIMESTEP: number = 1 / 16;
 const PLAYER_VERTICAL_MOVEMENT_UPDATE_INTERVAL: number = 1000;
 const PLAYER_VERTICAL_INCREMENT: number = 20;
 const PLAYER_SCORE_INCREMENT: number = 5;
+const START_POS_X: number = 20;
+const START_POS_Y: number = 0;
 
 const INBOUND_MATCH_EVENT_PLAYER_INPUT = 'player-input';  // received player input
 const INBOUND_MATCH_EVENT_PLAYER_LOST = 'player-hit';    // player lost by hitting a bullet client side
@@ -35,4 +37,6 @@ export {
   OUTBOUND_MATCH_EVENT_PLAYER_LOST,
   OUTBOUND_MATCH_EVENT_MATCH_INITAL,
   OUTBOUND_MATCH_EVENT_MATCH_UPDATE,
+  START_POS_X,
+  START_POS_Y,
 };

@@ -15,6 +15,8 @@ import {
   PLAYER_VERTICAL_INCREMENT,
   PLAYER_VERTICAL_MOVEMENT_UPDATE_INTERVAL,
   SHIP_POSITION_Y,
+  START_POS_X,
+  START_POS_Y,
 } from "./support/constants";
 import { calculateRandomVelocity } from "./support/utility";
 import { MatchInitalObject, MatchUpdateObject, PlayerInitalObject, PlayerUpdateObject } from "./support/types";
@@ -90,11 +92,18 @@ export class GameRoom {
       this.startDownwardMovement(player);
 
       const playerInitial: PlayerInitalObject = {
+        startX: START_POS_X, startY: START_POS_Y,
         avatarIndex: 0, username: player.clientId
       };
       
       initalUpdate.playerInitals.push(playerInitial);
     });
+
+    for (let index = 0; index < this.playersInRoom.length; index++) {
+      const player = this.playersInRoom[index];
+      const playerStartingLocation = index === 0 ? 20 : 1380;
+      this.playersInRoom[index].x = playerStartingLocation;
+    }
 
     this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_MATCH_INITAL, initalUpdate);
 
@@ -191,15 +200,17 @@ export class GameRoom {
       shootBullet: this.ShouldFireBullet(),
       shipPositionX: this.shipDynamicBody!.position[0],
     };
-    this.playersInRoom!.forEach((player) => {
+    for (let index = 0; index < this.playersInRoom.length; index++) {
+      const player = this.playersInRoom[index];
+      const playerStartingLocation = index === 0 ? 20 : 1380;
       const playerUpdate: PlayerUpdateObject = {
-        x: player.x,
+        x: player.x === 0 ? playerStartingLocation : player.x,
         y: player.y,
         score: player.score,
         isAlive: player.isAlive,
       };
       gameUpdate.playerUpdates.push(playerUpdate);
-    });
+    }
     this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_MATCH_UPDATE, gameUpdate);
 
     // check player count is valid
