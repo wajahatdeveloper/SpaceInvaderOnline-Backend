@@ -55,6 +55,10 @@ export class GameRoom {
     console.log(`GameRoom [${this.roomId}]: New GameRoom Instantiated`);
   }
 
+  getPlayerByClientId(clientId: string): GamePlayer {
+    return this.playersInRoom.find(p => p.clientId === clientId)!;
+  }
+
   startMatch() {
     console.log(`GameRoom [${this.roomId}]: Starting Match`);
 
@@ -142,9 +146,12 @@ export class GameRoom {
   }
 
   handlePlayerLost(player: GamePlayer) {
+    let lostPlayer = this.getPlayerByClientId(player.clientId);
+    lostPlayer.isAlive = false;
     this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_LOST, {
       loserId: player.clientId
-    });    console.log(
+    });
+    console.log(
       `GameRoom [${this.roomId}]: Player ${player.clientId} lost the match!`
     );
   }
@@ -213,10 +220,10 @@ export class GameRoom {
     this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_MATCH_UPDATE, gameUpdate);
 
     // check player count is valid
-    if (this.playersInRoom?.length <= 1) {
+    if (this.playersInRoom?.filter(x=>x.isAlive === true).length <= 1) {
       // give the last remaining player the win, and close the room
-      const player = this.playersInRoom[0];
-      this.handlePlayerWon(player);
+      //const player = this.playersInRoom[0];
+      //this.handlePlayerWon(player);
       console.log(`GameRoom [${this.roomId}]: Destroyed`);
       this.delete();
     }
@@ -227,7 +234,7 @@ export class GameRoom {
     this.bulletShootTimerValue += GAME_TICKER_MS;
 
     // shoot every 5th update cycle
-    if (this.bulletShootTimerValue >= GAME_TICKER_MS * 50) {
+    if (this.bulletShootTimerValue >= GAME_TICKER_MS * 10) {
       this.bulletShootTimerValue = 0;
       bulletOrBlank = Math.floor((Math.random() * 2000 + 50) * 1000);
     }

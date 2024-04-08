@@ -4,7 +4,7 @@ import express from "express";
 import httpServer from "http";
 import { Server } from "socket.io";
 
-import { PORT, GAME_TICKER_MS } from "./support/constants";
+import { PORT } from "./support/constants";
 import { ClientData, NetEvent, eventManager, useServer } from "./net-phaser-server";
 
 import { MIN_PLAYERS_TO_START_MATCH } from "./support/constants";
