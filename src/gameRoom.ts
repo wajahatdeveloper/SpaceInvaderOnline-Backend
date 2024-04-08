@@ -100,7 +100,6 @@ export class GameRoom {
     });
 
     for (let index = 0; index < this.playersInRoom.length; index++) {
-      const player = this.playersInRoom[index];
       const playerStartingLocation = index === 0 ? 20 : 1380;
       this.playersInRoom[index].x = playerStartingLocation;
     }
