@@ -137,9 +137,7 @@ export class GameRoom {
 
   handlePlayerWon(player: GamePlayer) {
     this.isMatchStarted = false;
-    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_WON, {
-      winnerId: player.clientId
-    });
+    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_WON, player.clientId);
     console.log(
       `GameRoom [${this.roomId}]: Player ${player.clientId} won the match!`
     );
@@ -148,9 +146,7 @@ export class GameRoom {
   handlePlayerLost(player: GamePlayer) {
     let lostPlayer = this.getPlayerByClientId(player.clientId);
     lostPlayer.isAlive = false;
-    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_LOST, {
-      loserId: player.clientId
-    });
+    this.socketIO.to(this.roomId).emit(OUTBOUND_MATCH_EVENT_PLAYER_LOST, player.clientId);
     console.log(
       `GameRoom [${this.roomId}]: Player ${player.clientId} lost the match!`
     );
